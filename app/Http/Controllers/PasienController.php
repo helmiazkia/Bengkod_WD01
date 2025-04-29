@@ -27,19 +27,18 @@ class PasienController extends Controller
 
     public function storePeriksa(Request $request)
     {
+        // Validasi hanya untuk id_dokter yang wajib diisi
         $request->validate([
             'id_dokter' => 'required|exists:users,id',
-            'tgl_periksa' => 'nullable|date',
-            'catatan' => 'nullable|string|max:255',
-            'biaya_periksa' => 'nullable|integer',
         ]);
 
+        // Membuat data pemeriksaan dengan nilai default untuk biaya_periksa dan tanggal periksa
         Periksa::create([
             'id_dokter' => $request->id_dokter,
-            'id_pasien' => Auth::id(), // Supaya pasiennya pasti sesuai user login
-            'tgl_periksa' => $request->tgl_periksa,
-            'catatan' => $request->catatan,
-            'biaya_periksa' => $request->biaya_periksa,
+            'id_pasien' => Auth::id(), // Pasiennya sesuai dengan yang login
+            'tgl_periksa' => now(), // Tanggal periksa adalah tanggal sekarang + jam
+            'catatan' => $request->catatan ?? null, // Jika tidak ada catatan, kosongkan
+            'biaya_periksa' => $request->biaya_periksa ?? 0, // Jika tidak ada biaya, set 0
         ]);
 
         return redirect()->route('periksaPasien')->with('success', 'Permintaan pemeriksaan berhasil dikirim.');

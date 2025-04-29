@@ -17,7 +17,7 @@
         <i class="nav-icon fas fa-search"></i>
         <p>
           Periksa
-          <span class="right badge badge-danger">New</span>
+          
         </p>
       </a>
     </li>
@@ -26,7 +26,7 @@
         <i class="nav-icon fas fa-vials"></i>
         <p>
           Obat
-          <span class="right badge badge-danger">New</span>
+          
         </p>
       </a>
     </li>
@@ -206,13 +206,13 @@
       var button = $(event.relatedTarget);
       var id = button.data('id');
       var nama = button.data('nama');
-      var tgl = button.data('tgl');
+      var tgl = button.data('tgl'); // Ambil tanggal pemeriksaan
       var catatan = button.data('catatan');
       var biaya = button.data('biaya');
 
       var modal = $(this);
       modal.find('#nama').val(nama);
-      modal.find('#tgl_periksa').val(tgl);
+      modal.find('#tgl_periksa').val(tgl); // Pastikan tanggal periksa terisi di input
       modal.find('#catatan').val(catatan);
 
       totalObat = 0;

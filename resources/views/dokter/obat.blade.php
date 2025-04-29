@@ -17,7 +17,7 @@
         <i class="nav-icon fas fa-search"></i>
         <p>
           Periksa
-          <span class="right badge badge-danger">New</span>
+          
         </p>
       </a>
     </li>
@@ -26,7 +26,7 @@
         <i class="nav-icon fas fa-vials"></i>
         <p>
           Obat
-          <span class="right badge badge-danger">New</span>
+          
         </p>
       </a>
     </li>
