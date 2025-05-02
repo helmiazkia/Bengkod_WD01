@@ -38,7 +38,6 @@ class DokterController extends Controller
     public function updatePeriksa(Request $request, $id)
     {
         $request->validate([
-            'tgl_periksa' => 'required|date',
             'catatan' => 'nullable|string',
             'biaya_periksa' => 'required|integer',
         ]);
@@ -49,7 +48,7 @@ class DokterController extends Controller
         }
 
         $periksa->update([
-            'tgl_periksa' => $request->tgl_periksa,
+            
             'catatan' => $request->catatan,
             'biaya_periksa' => $request->biaya_periksa,
         ]);

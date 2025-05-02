@@ -151,10 +151,7 @@
             <label>Nama Pasien</label>
             <input type="text" id="nama" name="nama" class="form-control" readonly>
           </div>
-          <div class="form-group">
-            <label>Tanggal Periksa</label>
-            <input type="date" name="tgl_periksa" id="tgl_periksa" class="form-control">
-          </div>
+
           <div class="form-group">
             <label>Catatan</label>
             <textarea name="catatan" id="catatan" class="form-control"></textarea>
