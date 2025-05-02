@@ -1,18 +1,23 @@
 @include('layout.header', ['title' => 'Dashboard Periksa'])
-
 <!-- Sidebar Menu -->
 <nav class="mt-2">
   <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
+    <!-- Add icons to the links using the .nav-icon class
+               with font-awesome or any other icon font library -->
     <li class="nav-item menu-open">
       <a href="{{ route('dashboardPasien') }}" class="nav-link">
         <i class="nav-icon fas fa-tachometer-alt"></i>
-        <p>Dashboard</p>
+        <p>
+          Dashboard
+        </p>
       </a>
     </li>
     <li class="nav-item">
       <a href="{{ route('periksaPasien') }}" class="nav-link active">
         <i class="nav-icon fas fa-search"></i>
-        <p>Periksa</p>
+        <p>
+          Periksa
+        </p>
       </a>
     </li>
     <li class="nav-item">
@@ -20,6 +25,7 @@
         <i class="nav-icon fas fa-lock"></i>
         <p>Logout</p>
       </a>
+
       <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
         @csrf
       </form>
@@ -33,54 +39,58 @@
 
 <!-- Content Wrapper. Contains page content -->
 <div class="content-wrapper">
-  <!-- Content Header -->
+  <!-- Content Header (Page header) -->
   <div class="content-header">
     <div class="container-fluid">
       <div class="row mb-2">
-        <div class="col-sm-6"></div>
+        <div class="col-sm-6">
+          <!-- <h1 class="m-0">Dashboard</h1> -->
+        </div><!-- /.col -->
         <div class="col-sm-6">
           <ol class="breadcrumb float-sm-right">
             <li class="breadcrumb-item"><a href="#">Home</a></li>
             <li class="breadcrumb-item active">Periksa</li>
           </ol>
-        </div>
-      </div>
-    </div>
+        </div><!-- /.col -->
+      </div><!-- /.row -->
+    </div><!-- /.container-fluid -->
   </div>
   <!-- /.content-header -->
 
   <!-- Main content -->
   <section class="content">
     <div class="container-fluid">
-      
-      <!-- Form Periksa -->
+      <!-- general form elements -->
       <div class="card card-primary">
         <div class="card-header">
           <h3 class="card-title">Form Periksa</h3>
         </div>
-        <form action="{{ route('storePeriksa') }}" method="POST">
+        <!-- /.card-header -->
+        <!-- form start -->
+        <form action="periksa" method="POST">
           @csrf
           <div class="card-body">
+            <input type="hidden" class="form-control" name="id_pasien" id="id_pasien" value="{{ Auth::user()->id }}" readonly>
             <div class="form-group">
-              <label>Nama Anda</label>
+              <label for="exampleInputName">Nama Anda</label>
               <input type="text" class="form-control" value="{{ Auth::user()->nama }}" readonly>
             </div>
             <div class="form-group">
-              <label for="id_dokter">Pilih Dokter</label>
-              <select class="form-control" id="id_dokter" name="id_dokter" required>
+              <label for="exampleInputDokter">Pilih Dokter</label>
+              <select class="form-control" id="id_dokter" name="id_dokter">
                 @foreach ($showDokter as $dokter)
-                  <option value="{{ $dokter->id }}">dr. {{ $dokter->nama }}</option>
+                <option value="{{ $dokter->id }}">dr. {{ $dokter->nama }}</option>
                 @endforeach
               </select>
             </div>
           </div>
+          <!-- /.card-body -->
+
           <div class="card-footer">
-            <button type="submit" class="btn btn-primary">Kirim Permintaan Periksa</button>
+            <button type="submit" class="btn btn-primary">Submit</button>
           </div>
         </form>
       </div>
-
-      <!-- Riwayat Periksa -->
       <div class="row">
         <div class="col-12">
           <div class="card card-primary">
@@ -97,6 +107,7 @@
                 </div>
               </div>
             </div>
+            <!-- /.card-header -->
             <div class="card-body table-responsive p-0">
               <table class="table table-hover text-nowrap">
                 <thead>
@@ -109,29 +120,19 @@
                   </tr>
                 </thead>
                 <tbody>
-                  @forelse ($periksa as $item)
+                  @foreach ($periksa as $item)
                   <tr>
                     <td>{{ $loop->iteration }}</td>
                     <td>dr. {{ $item->dokter->nama }}</td>
-                    <td>{{ $item->created_at->format('d-m-Y H:i') }}</td> <!-- Tanggal berdasarkan created_at -->
+                    <td>{{ $item->tgl_periksa ? $item->tgl_periksa: 'N/A' }}</td>
+                    <td>{{ $item->biaya_periksa ? 'Rp. '.number_format($item->biaya_periksa, 0, ',','.'): '  N/A' }}</td>
                     <td>
-                      @if ($item->biaya_periksa)
-                        Rp. {{ number_format($item->biaya_periksa, 0, ',', '.') }}
-                      @else
-                        N/A
-                      @endif
-                    </td>
-                    <td>
-                      <span class="badge badge-success">
-                        Menunggu Pemeriksaan
+                      <span class="badge {{ $item->tgl_periksa ? 'badge-success' : 'badge-warning' }}">
+                        {{ $item->tgl_periksa ? 'Sudah Ditangani' : 'Menunggu Pemeriksaan' }}
                       </span>
                     </td>
                   </tr>
-                  @empty
-                  <tr>
-                    <td colspan="5" class="text-center">Belum ada riwayat periksa.</td>
-                  </tr>
-                  @endforelse
+                  @endforeach
                 </tbody>
               </table>
             </div>
@@ -140,12 +141,12 @@
           <!-- /.card -->
         </div>
       </div>
+      <!-- /.card -->
 
+      <!-- general form elements -->
     </div><!-- /.container-fluid -->
   </section>
   <!-- /.content -->
 </div>
 <!-- /.content-wrapper -->
-
 @include('layout.footer')
-  
