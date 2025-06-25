@@ -2,60 +2,93 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\DetailPeriksa;
 use App\Models\Obat;
 use App\Models\Periksa;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Models\Dokter;
+use App\Models\Poli;
+use Illuminate\Support\Facades\Hash;
 
 class DokterController extends Controller
 {
+    // === Dashboard Dokter ===
     public function index()
     {
-        return view('dokter.dashboard');
+        $dokterId = Auth::user()->dokter->id;
+
+        $totalSelesai = Periksa::whereHas('jadwal', function ($q) use ($dokterId) {
+            $q->where('dokter_id', $dokterId);
+        })->where('status', 'selesai')->count();
+
+        $totalBelum = Periksa::whereHas('jadwal', function ($q) use ($dokterId) {
+            $q->where('dokter_id', $dokterId);
+        })->where('status', '!=', 'selesai')->count();
+
+        return view('dokter.dashboard', compact('totalSelesai', 'totalBelum'));
     }
 
+
+    // === Tampilkan Daftar Pemeriksaan (untuk dokter yang login) ===
     public function showPeriksa()
     {
-        $obats = Obat::latest()->get();
-        $periksa = Periksa::with('pasien')
-                    ->where('id_dokter', Auth::id())
-                    ->latest()
-                    ->get();
+        $dokterId = Auth::user()->dokter->id;
+
+        $periksa = Periksa::with(['pasien', 'jadwal.dokter'])
+            ->whereHas('jadwal', function ($q) use ($dokterId) {
+                $q->where('dokter_id', $dokterId);
+            })
+            ->latest()
+            ->get();
+
+        $obats = Obat::all();
+
         return view('dokter.periksa', compact('periksa', 'obats'));
     }
 
+    // === Tampilkan Form Edit Pemeriksaan ===
     public function editPeriksa($id)
     {
-        $periksa = Periksa::with('pasien')->findOrFail($id);
+        $periksa = Periksa::with(['pasien', 'jadwal.dokter'])->findOrFail($id);
 
-        if ($periksa->id_dokter !== Auth::id()) {
+        if ($periksa->jadwal->dokter->user_id !== Auth::id()) {
             abort(403);
         }
 
-        return view('dokter.periksaEdit', compact('periksa'));
+        $obats = Obat::all();
+
+        return view('dokter.periksaEdit', compact('periksa', 'obats'));
     }
 
+    // === Simpan Update Pemeriksaan ===
     public function updatePeriksa(Request $request, $id)
     {
         $request->validate([
-            'catatan' => 'nullable|string',
-            'biaya_periksa' => 'required|integer',
+            'catatan_dokter' => 'nullable|string',
+            'biaya_periksa' => 'required|integer|min:0',
+            'obats' => 'nullable|array',
+            'obats.*' => 'exists:obats,id',
         ]);
 
-        $periksa = Periksa::findOrFail($id);
-        if ($periksa->id_dokter !== Auth::id()) {
+        $periksa = Periksa::with('jadwal.dokter')->findOrFail($id);
+
+        if ($periksa->jadwal->dokter->user_id !== Auth::id()) {
             abort(403);
         }
 
         $periksa->update([
-            
-            'catatan' => $request->catatan,
+            'catatan_dokter' => $request->catatan_dokter,
             'biaya_periksa' => $request->biaya_periksa,
+            'status' => 'selesai',
         ]);
 
-        return redirect()->route('periksaDokter')->with('success', 'Data periksa berhasil diperbarui.');
+        $periksa->obats()->sync($request->obats ?? []);
+
+        return redirect()->route('periksaDokter')->with('success', 'Pemeriksaan berhasil diperbarui.');
     }
 
+    // === CRUD Obat ===
     public function showObat()
     {
         $obats = Obat::latest()->get();
@@ -92,5 +125,84 @@ class DokterController extends Controller
         $obat = Obat::findOrFail($id);
         $obat->delete();
         return redirect()->route('obatDokter');
+    }
+
+    // === Profil Dokter ===
+    public function editProfile()
+    {
+        $dokter = Dokter::with('user')->where('user_id', Auth::id())->firstOrFail();
+        $polis = Poli::all();
+
+        return view('dokter.profile', compact('dokter', 'polis'));
+    }
+
+    public function updateProfile(Request $request)
+    {
+        $request->validate([
+            'nama' => 'required|string|max:100',
+            'alamat' => 'required|string|max:255',
+            'password' => 'nullable|string|min:8|confirmed',
+        ]);
+
+        $dokter = Dokter::where('user_id', Auth::id())->firstOrFail();
+        $user = $dokter->user;
+
+        // Update tabel dokters
+        $dokter->update([
+            'nama' => $request->nama,
+            'alamat' => $request->alamat,
+        ]);
+
+        // Update tabel users
+        $user->nama = $request->nama;
+        $user->alamat = $request->alamat;
+        if ($request->filled('password')) {
+            $user->password = Hash::make($request->password);
+        }
+        $user->save();
+
+        return redirect()->route('dokter.profile.edit')->with('success', 'Profil berhasil diperbarui.');
+    }
+
+
+
+    // === Riwayat Semua Pasien yang Pernah Diperiksa oleh Dokter ===
+
+
+    public function riwayatPasien()
+    {
+        $dokterUserId = Auth::id();
+
+        $riwayat = Periksa::with(['pasien', 'jadwal.dokter']) // wajib include 'pasien'
+            ->where('status', 'selesai')
+            ->whereHas('jadwal.dokter', function ($q) use ($dokterUserId) {
+                $q->where('user_id', $dokterUserId);
+            })
+            ->orderByDesc('tgl_periksa')
+            ->get();
+
+        return view('dokter.riwayat', compact('riwayat'));
+    }
+
+
+
+    // === Detail Riwayat Pasien: Hanya yang Diperiksa oleh Dokter yang Login ===
+    public function riwayatPasienDetail($idPasien)
+    {
+        $dokterId = Auth::user()->dokter->id;
+
+        $riwayat = Periksa::with(['pasien', 'jadwal.dokter.user', 'obats'])
+            ->where('id_pasien', $idPasien)
+            ->whereHas('jadwal', function ($q) use ($dokterId) {
+                $q->where('dokter_id', $dokterId);
+            })
+            ->orderByDesc('tgl_periksa')
+            ->get();
+
+        $namaPasien = optional($riwayat->first()->pasien)->nama ?? 'Pasien';
+        $totalKunjungan = $riwayat->count();
+
+
+        return view('dokter.riwayatDetail', compact('riwayat', 'namaPasien', 'totalKunjungan'));
     }
 }

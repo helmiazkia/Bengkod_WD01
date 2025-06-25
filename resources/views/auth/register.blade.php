@@ -26,12 +26,23 @@
       <div class="card-body register-card-body">
         <p class="login-box-msg">Register a new account</p>
 
+        <!-- Tampilkan error validasi -->
+        @if ($errors->any())
+        <div class="alert alert-danger">
+          <ul class="mb-0">
+            @foreach ($errors->all() as $error)
+            <li>{{ $error }}</li>
+            @endforeach
+          </ul>
+        </div>
+        @endif
+
         <!-- Form Start -->
         <form action="{{ route('register') }}" method="POST">
-          @csrf <!-- WAJIB: untuk proteksi form -->
+          @csrf
 
           <div class="input-group mb-3">
-            <input type="text" name="nama" class="form-control" placeholder="Full Name" required>
+            <input type="text" name="nama" class="form-control" placeholder="Full Name" required value="{{ old('nama') }}">
             <div class="input-group-append">
               <div class="input-group-text">
                 <span class="fas fa-user"></span>
@@ -40,16 +51,25 @@
           </div>
 
           <div class="input-group mb-3">
-            <input type="text" name="alamat" class="form-control" placeholder="Alamat" required>
+            <input type="text" name="alamat" class="form-control" placeholder="Alamat" required value="{{ old('alamat') }}">
             <div class="input-group-append">
               <div class="input-group-text">
                 <span class="fas fa-map-marker-alt"></span>
               </div>
             </div>
           </div>
+          <!-- Tambahkan di antara field Alamat dan No HP -->
+          <div class="input-group mb-3">
+            <input type="text" name="no_ktp" class="form-control" placeholder="No KTP" required value="{{ old('no_ktp') }}">
+            <div class="input-group-append">
+              <div class="input-group-text">
+                <span class="fas fa-id-card"></span>
+              </div>
+            </div>
+          </div>
 
           <div class="input-group mb-3">
-            <input type="text" name="no_hp" class="form-control" placeholder="No HP" required>
+            <input type="text" name="no_hp" class="form-control" placeholder="No HP" required value="{{ old('no_hp') }}">
             <div class="input-group-append">
               <div class="input-group-text">
                 <span class="fas fa-phone"></span>
@@ -58,7 +78,7 @@
           </div>
 
           <div class="input-group mb-3">
-            <input type="email" name="email" class="form-control" placeholder="Email" required>
+            <input type="email" name="email" class="form-control" placeholder="Email" required value="{{ old('email') }}">
             <div class="input-group-append">
               <div class="input-group-text">
                 <span class="fas fa-envelope"></span>
@@ -68,6 +88,16 @@
 
           <div class="input-group mb-3">
             <input type="password" name="password" class="form-control" placeholder="Password" required>
+            <div class="input-group-append">
+              <div class="input-group-text">
+                <span class="fas fa-lock"></span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Konfirmasi password -->
+          <div class="input-group mb-3">
+            <input type="password" name="password_confirmation" class="form-control" placeholder="Konfirmasi Password" required>
             <div class="input-group-append">
               <div class="input-group-text">
                 <span class="fas fa-lock"></span>

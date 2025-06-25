@@ -2,21 +2,23 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use App\Models\Periksa;
+use App\Models\Pasien;
+use App\Models\Dokter;
 
 class User extends Authenticatable
 {
-    /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable;
 
     /**
-     * The attributes that are mass assignable.
+     * Kolom yang dapat diisi secara massal.
      *
-     * @var list<string>
+     * @var array<string>
      */
     protected $fillable = [
         'nama',
@@ -28,9 +30,9 @@ class User extends Authenticatable
     ];
 
     /**
-     * The attributes that should be hidden for serialization.
+     * Kolom yang disembunyikan saat serialisasi.
      *
-     * @var list<string>
+     * @var array<string>
      */
     protected $hidden = [
         'password',
@@ -38,27 +40,43 @@ class User extends Authenticatable
     ];
 
     /**
-     * Get the attributes that should be cast.
+     * Tipe konversi otomatis untuk atribut tertentu.
      *
-     * @return array<string, string>
+     * @var array<string,string>
      */
-    protected function casts(): array
+    protected $casts = [
+        'email_verified_at' => 'datetime',
+    ];
+
+    /**
+     * Relasi ke tabel periksa sebagai pasien.
+     */
+    public function periksaPasien(): HasMany
     {
-        return [
-            'email_verified_at' => 'datetime',
-            'password' => 'hashed',
-        ];
+        return $this->hasMany(Periksa::class, 'id_pasien');
     }
 
-   
-    public function periksa_pasien():HasMany
+    /**
+     * Relasi ke tabel periksa sebagai dokter.
+     */
+    public function periksaDokter(): HasMany
     {
-        return $this->hasMany(Periksa::class, 'id_pasien', localKey: 'id');
+        return $this->hasMany(Periksa::class, 'id_dokter');
     }
 
-    public function periksa_dokter():HasMany
+    /**
+     * Relasi ke data pasien (jika user adalah pasien).
+     */
+    public function pasien(): HasOne
     {
-        return $this->hasMany(Periksa::class, 'id_dokter', localKey: 'id');
+        return $this->hasOne(Pasien::class, 'user_id');
     }
-    
+
+    /**
+     * Relasi ke data dokter (jika user adalah dokter).
+     */
+    public function dokter(): HasOne
+    {
+        return $this->hasOne(Dokter::class, 'user_id');
+    }
 }

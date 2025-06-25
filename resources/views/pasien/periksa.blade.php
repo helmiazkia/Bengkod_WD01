@@ -1,23 +1,18 @@
 @include('layout.header', ['title' => 'Dashboard Periksa'])
-<!-- Sidebar Menu -->
+
+<!-- Sidebar -->
 <nav class="mt-2">
-  <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
-    <!-- Add icons to the links using the .nav-icon class
-               with font-awesome or any other icon font library -->
+  <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu">
     <li class="nav-item menu-open">
       <a href="{{ route('dashboardPasien') }}" class="nav-link">
         <i class="nav-icon fas fa-tachometer-alt"></i>
-        <p>
-          Dashboard
-        </p>
+        <p>Dashboard</p>
       </a>
     </li>
     <li class="nav-item">
       <a href="{{ route('periksaPasien') }}" class="nav-link active">
         <i class="nav-icon fas fa-search"></i>
-        <p>
-          Periksa
-        </p>
+        <p>Periksa</p>
       </a>
     </li>
     <li class="nav-item">
@@ -25,128 +20,131 @@
         <i class="nav-icon fas fa-lock"></i>
         <p>Logout</p>
       </a>
-
-      <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
-        @csrf
-      </form>
+      <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">@csrf</form>
     </li>
   </ul>
 </nav>
-<!-- /.sidebar-menu -->
 </div>
-<!-- /.sidebar -->
 </aside>
 
-<!-- Content Wrapper. Contains page content -->
+<!-- Content Wrapper -->
 <div class="content-wrapper">
-  <!-- Content Header (Page header) -->
   <div class="content-header">
     <div class="container-fluid">
-      <div class="row mb-2">
-        <div class="col-sm-6">
-          <!-- <h1 class="m-0">Dashboard</h1> -->
-        </div><!-- /.col -->
-        <div class="col-sm-6">
-          <ol class="breadcrumb float-sm-right">
-            <li class="breadcrumb-item"><a href="#">Home</a></li>
-            <li class="breadcrumb-item active">Periksa</li>
-          </ol>
-        </div><!-- /.col -->
-      </div><!-- /.row -->
-    </div><!-- /.container-fluid -->
+      <h1 class="m-0">Daftar Poli</h1>
+    </div>
   </div>
-  <!-- /.content-header -->
 
-  <!-- Main content -->
   <section class="content">
     <div class="container-fluid">
-      <!-- general form elements -->
-      <div class="card card-primary">
-        <div class="card-header">
-          <h3 class="card-title">Form Periksa</h3>
-        </div>
-        <!-- /.card-header -->
-        <!-- form start -->
-        <form action="periksa" method="POST">
-          @csrf
-          <div class="card-body">
-            <input type="hidden" class="form-control" name="id_pasien" id="id_pasien" value="{{ Auth::user()->id }}" readonly>
-            <div class="form-group">
-              <label for="exampleInputName">Nama Anda</label>
-              <input type="text" class="form-control" value="{{ Auth::user()->nama }}" readonly>
-            </div>
-            <div class="form-group">
-              <label for="exampleInputDokter">Pilih Dokter</label>
-              <select class="form-control" id="id_dokter" name="id_dokter">
-                @foreach ($showDokter as $dokter)
-                <option value="{{ $dokter->id }}">dr. {{ $dokter->nama }}</option>
-                @endforeach
-              </select>
-            </div>
-          </div>
-          <!-- /.card-body -->
 
-          <div class="card-footer">
-            <button type="submit" class="btn btn-primary">Submit</button>
-          </div>
-        </form>
+      @if(session('success'))
+      <div class="alert alert-success">{{ session('success') }}</div>
+      @endif
+
+      @if ($errors->any())
+      <div class="alert alert-danger">
+        <ul class="mb-0">@foreach ($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul>
       </div>
+      @endif
+
       <div class="row">
-        <div class="col-12">
-          <div class="card card-primary">
-            <div class="card-header">
-              <h3 class="card-title">Riwayat Periksa</h3>
-              <div class="card-tools">
-                <div class="input-group input-group-sm" style="width: 150px;">
-                  <input type="text" name="table_search" class="form-control float-right" placeholder="Search">
-                  <div class="input-group-append">
-                    <button type="submit" class="btn btn-default">
-                      <i class="fas fa-search"></i>
-                    </button>
-                  </div>
+        <!-- Form Pendaftaran -->
+        <div class="col-md-5">
+          <div class="card border-primary">
+            <div class="card-header bg-primary text-white">Daftar Poli</div>
+            <div class="card-body">
+              <form action="{{ route('storePeriksa') }}" method="POST">
+                @csrf
+
+                <div class="form-group">
+                  <label>Nomor Rekam Medis</label>
+                  <input type="text" class="form-control" value="{{ Auth::user()->pasien->no_rm ?? '-' }}" readonly>
                 </div>
+
+                <div class="form-group">
+                  <label>Pilih Jadwal Dokter</label>
+                  <select name="id_jadwal" class="form-control" required>
+                    <option value="">-- Pilih Jadwal Dokter --</option>
+                    @foreach ($jadwalDokters as $jadwal)
+                    <option value="{{ $jadwal->id }}">
+                      {{ $jadwal->dokter->user->nama ?? '-' }} - {{ $jadwal->dokter->poli->nama ?? '-' }}
+                      ({{ $jadwal->hari }}, {{ $jadwal->jam_mulai }} - {{ $jadwal->jam_selesai }})
+                    </option>
+                    @endforeach
+                  </select>
+                </div>
+
+                <div class="form-group">
+                  <label>Keluhan</label>
+                  <textarea name="keluhan" rows="3" class="form-control"></textarea>
+
+                </div>
+
+                <div class="form-group text-right">
+                  <button type="submit" class="btn btn-primary">Daftar</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+
+        <!-- Riwayat Pendaftaran -->
+        <div class="col-md-7">
+          <div class="card border-info">
+            <div class="card-header bg-info text-white">Riwayat daftar poli</div>
+            <div class="card-body p-0">
+              <div class="table-responsive">
+                <table class="table table-bordered m-0 text-nowrap">
+                  <thead>
+                    <tr>
+                      <th>No.</th>
+                      <th>Poli</th>
+                      <th>Dokter</th>
+                      <th>Hari</th>
+                      <th>Mulai</th>
+                      <th>Selesai</th>
+                      <th>Antrian</th>
+                      <th>Status</th>
+                      <th>Aksi</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @forelse($periksa as $item)
+                    <tr>
+                      <td>{{ $loop->iteration }}</td>
+                      <td>{{ $item->jadwal->dokter->poli->nama ?? '-' }}</td>
+                      <td>{{ $item->jadwal->dokter->user->nama ?? '-' }}</td>
+                      <td>{{ $item->jadwal->hari ?? '-' }}</td>
+                      <td>{{ $item->jadwal->jam_mulai ?? '-' }}</td>
+                      <td>{{ $item->jadwal->jam_selesai ?? '-' }}</td>
+                      <td>{{ $item->nomor_antrian }}</td>
+                      <td>
+                        @if ($item->status == 'selesai')
+                        <span class="badge badge-success">Selesai</span>
+                        @else
+                        <span class="badge badge-danger">Belum diperiksa</span>
+                        @endif
+                      </td>
+                      <td>
+                        <a href="{{ route('periksa.detail', $item->id) }}" class="btn btn-sm btn-primary">Lihat</a>
+                      </td>
+                    </tr>
+                    @empty
+                    <tr>
+                      <td colspan="9" class="text-center">Tidak ada data</td>
+                    </tr>
+                    @endforelse
+                  </tbody>
+                </table>
               </div>
             </div>
-            <!-- /.card-header -->
-            <div class="card-body table-responsive p-0">
-              <table class="table table-hover text-nowrap">
-                <thead>
-                  <tr>
-                    <th>#</th>
-                    <th>Nama Dokter</th>
-                    <th>Tanggal Periksa</th>
-                    <th>Biaya Periksa</th>
-                    <th>Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  @foreach ($periksa as $item)
-                  <tr>
-                    <td>{{ $loop->iteration }}</td>
-                    <td>dr. {{ $item->dokter->nama }}</td>
-                    <td>{{ $item->tgl_periksa ? $item->tgl_periksa: 'N/A' }}</td>
-                    <td>{{ $item->biaya_periksa ? 'Rp. '.number_format($item->biaya_periksa, 0, ',','.'): '  N/A' }}</td>
-                    <td>
-                      <span class="badge {{ $item->tgl_periksa ? 'badge-success' : 'badge-warning' }}">
-                        {{ $item->tgl_periksa ? 'Sudah Ditangani' : 'Menunggu Pemeriksaan' }}
-                      </span>
-                    </td>
-                  </tr>
-                  @endforeach
-                </tbody>
-              </table>
-            </div>
-            <!-- /.card-body -->
           </div>
-          <!-- /.card -->
         </div>
       </div>
-      <!-- /.card -->
 
-      <!-- general form elements -->
-    </div><!-- /.container-fluid -->
+    </div>
   </section>
-  <!-- /.content -->
 </div>
-<!-- /.content-wrapper -->
+
 @include('layout.footer')

@@ -13,8 +13,8 @@ class DatabaseSeeder extends Seeder
             ObatSeeder::class,
             PeriksaSeeder::class,
             DetailPeriksaSeeder::class,
+            PoliSeeder::class,
+            DokterSeeder::class,
         ]);
     }
 }
-
-
